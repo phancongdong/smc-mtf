@@ -1,4 +1,4 @@
-"""High-performance parquet and dataset loader for SMC backtesting."""
+"""Data loading utilities for SMC strategy execution and signal generation."""
 
 from __future__ import annotations
 
@@ -72,7 +72,6 @@ def load_parquet(
     if not path.exists():
         raise FileNotFoundError(f"Parquet file not found: {path}")
 
-    # Infer symbol and timeframe from filename if not supplied (e.g. binance_spot_SOLUSDT_H1.parquet)
     stem = path.stem
     parts = stem.split("_")
 
@@ -83,7 +82,6 @@ def load_parquet(
 
     df = pd.read_parquet(path)
 
-    # Standardize timestamp column
     if "timestamp_ms" in df.columns:
         dt_series = pd.to_datetime(df["timestamp_ms"], unit="ms", utc=True)
     elif "timestamp" in df.columns:
@@ -103,7 +101,6 @@ def load_parquet(
     closes = df["close"].astype(float).values
     volumes = df["volume"].astype(float).values if "volume" in df.columns else np.zeros(len(df), dtype=float)
 
-    # Convert timestamps to python datetime
     timestamps = [ts.to_pydatetime() for ts in dt_series]
 
     candles: list[Candle] = []
@@ -119,7 +116,6 @@ def load_parquet(
             )
         )
 
-    # Filter out duplicate or non-monotonic timestamps if any exist
     clean_candles: list[Candle] = []
     for c in candles:
         if not clean_candles or c.timestamp > clean_candles[-1].timestamp:
@@ -131,28 +127,3 @@ def load_parquet(
         timeframe=inferred_timeframe,
         asset_class=inferred_asset_class,
     )
-
-
-def load_dataset(
-    symbol: str,
-    timeframe: str,
-    data_dir: Optional[Union[str, Path]] = None,
-) -> BarSeries:
-    """Find and load standard dataset from the data folder."""
-    if data_dir is None:
-        data_dir = Path(__file__).resolve().parent.parent / "data"
-    else:
-        data_dir = Path(data_dir)
-
-    target_name = f"binance_spot_{symbol}_{timeframe}.parquet"
-    target_path = data_dir / target_name
-
-    if not target_path.exists():
-        # Search by partial match
-        matches = list(data_dir.glob(f"*{symbol}*{timeframe}*.parquet"))
-        if matches:
-            target_path = matches[0]
-        else:
-            raise FileNotFoundError(f"No parquet found for {symbol} {timeframe} in {data_dir}")
-
-    return load_parquet(target_path, symbol=symbol, timeframe=timeframe)

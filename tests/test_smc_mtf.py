@@ -18,11 +18,11 @@ from src.types import (
     Candle,
     Direction,
     MarketRegime,
+    Position,
     Signal,
     Timeframe,
 )
 from src.strategy import SMCMultiTimeframeStrategy
-from src.execution import BacktestEngine
 from src.indicators import ATR, EMA, RSI, SMA
 from src.market_structure import detect_market_structure
 from src.zones import detect_order_blocks, detect_fvg, check_zone_rejection
@@ -157,37 +157,25 @@ def test_premium_discount_uses_chronological_impulse_pair():
     assert zones["high"] == 200
 
 
-# ─── Execution & Risk Geometry Tests ─────────────────────────────────
+# ─── Risk Geometry & Position Target Tests ─────────────────────────
 
-def test_rr_target_is_reanchored_to_actual_next_open_fill():
-    candles = [_c(i, 100, 101, 99, 100) for i in range(8)]
-    candles[3] = _c(3, 110, 111, 109, 110)
-    series = BarSeries(candles, "TEST", Timeframe.H1, AssetClass.CRYPTO)
-    captured = []
-
-    def signal_fn(view, idx):
-        if idx != 2:
-            return None
-        return Signal(
-            direction=Direction.LONG,
-            confidence=0.8,
-            score=60.0,
-            indicator_values={},
-            regime=MarketRegime.UNKNOWN,
-            strategy_name="FIXTURE",
-            timestamp=view.candles[idx].timestamp,
-            metadata={"sl": 90.0, "tp": 120.0, "risk_reward": 2.0, "max_hold": 20},
-        )
-
-    BacktestEngine(slippage_bps=0, spread_bps=0, commission_bps=0).run(
-        series, signal_fn, warmup_bars=1,
-        on_entry=lambda series, idx, position, fill: captured.append(position),
+def test_position_risk_reward_target_geometry():
+    entry_price = 110.0
+    stop_loss = 90.0
+    risk_reward = 2.0
+    take_profit = entry_price + risk_reward * (entry_price - stop_loss)
+    pos = Position(
+        symbol="TEST",
+        direction=Direction.LONG,
+        entry_time=T0,
+        entry_price=entry_price,
+        current_size=1.0,
+        stop_loss=stop_loss,
+        take_profit=take_profit,
     )
-    assert captured
-    position = captured[0]
-    assert position.take_profit == pytest.approx(
-        position.entry_price + 2.0 * (position.entry_price - position.stop_loss)
-    )
+    assert pos.take_profit == pytest.approx(150.0)
+    assert pos.highest_since_entry == 110.0
+    assert pos.lowest_since_entry == 110.0
 
 
 def test_trend_label_without_bos_or_choch_cannot_emit_signal(monkeypatch):

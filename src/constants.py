@@ -18,6 +18,7 @@ DEFAULT_MAX_HOLD_BARS: int = 20
 DEFAULT_SL_ATR_MULT: float = 1.5
 DEFAULT_TP_ATR_MULT: float = 3.0
 DEFAULT_CONFIRMATION_MODE: str = "both"
+DEFAULT_WARMUP_BARS: int = 100
 
 # Scoring Weight Defaults
 DEFAULT_HTF_STRUCTURE_WEIGHT: int = 20
@@ -28,20 +29,3 @@ DEFAULT_HTF_DISCOUNT_WEIGHT: int = 5
 DEFAULT_LTF_SWEEP_WEIGHT: int = 15
 DEFAULT_LTF_REVERSAL_WEIGHT: int = 15
 DEFAULT_LTF_MOMENTUM_WEIGHT: int = 10
-
-# Backtest Engine Defaults
-DEFAULT_CAPITAL: float = 1_000_000.0
-DEFAULT_RISK_PER_TRADE: float = 0.005
-DEFAULT_SLIPPAGE_BPS: float = 1.0
-DEFAULT_COMMISSION_BPS: float = 4.0
-DEFAULT_SPREAD_BPS: float = 1.0
-DEFAULT_WARMUP_BARS: int = 100
-DEFAULT_RANDOM_SEED: int = 42
-
-# Fee structures by asset class
-ASSET_FEES = {
-    "CRYPTO": {"spread_bps": 1.0, "commission_bps": 4.0, "slippage_bps": 1.0},
-    "COMMODITY": {"spread_bps": 2.0, "commission_bps": 4.0, "slippage_bps": 1.0},
-    "FOREX": {"spread_bps": 0.5, "commission_bps": 2.0, "slippage_bps": 0.5},
-    "INDEX": {"spread_bps": 1.0, "commission_bps": 2.0, "slippage_bps": 0.5},
-}

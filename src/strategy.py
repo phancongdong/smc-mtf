@@ -93,7 +93,7 @@ class SMCMultiTimeframeStrategy:
         self._htf_atr_cache: Optional[np.ndarray] = None
         self._htf_close_times: List[datetime] = []
 
-        # LTF Caches for sequential backtests
+        # LTF Caches for sequential evaluation
         self._ltf_cache_timestamps: List[datetime] = []
         self._ltf_rsi7_cache: Optional[np.ndarray] = None
         self._ltf_ema10_cache: Optional[np.ndarray] = None
