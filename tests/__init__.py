@@ -1,0 +1,1 @@
+"""SMC MTF Test Suite."""
